@@ -1,5 +1,5 @@
-import sys
 import pygame
+import sys
 
 
 pygame.init()
@@ -79,6 +79,14 @@ while running:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+
+    # move the players car using left/right arrow keys
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT and player.rect.center[0] > left_lane:
+                player.rect.x -= 130
+            elif event.key == pygame.K_RIGHT and player.rect.center[1] < right_lane:
+                player.rect.x += 130
+
 
     # draw grass
     screen.fill(green)
