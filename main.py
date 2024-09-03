@@ -1,4 +1,5 @@
 import pygame
+import random
 import sys
 
 
@@ -29,7 +30,7 @@ right_edge_markers = (595, 0, markers_width, height)
 left_lane = 280
 center_lane = 420
 right_lane = 550
-lane = [left_lane, center_lane, right_lane]
+lanes = [left_lane, center_lane, right_lane]
 
 # animation movement
 lane_marker_move_y = 0
@@ -62,6 +63,16 @@ player_y = 430
 player_group = pygame.sprite.Group()
 player = PlayerVehicle(player_x, player_y)
 player_group.add(player)
+
+#load the vehicles
+image_filenames = ['car1.png', 'car3.jpg', 'semi_trailer.png', 'trailer_truck.png']
+vehicle_images = []
+for image_filename in image_filenames:
+    image = pygame.image.load('cars/'+ image_filename)
+    vehicle_images.append(image)
+
+#sprite group for vehicles
+vehicle_group = pygame.sprite.Group()
 
 
 # game settings
@@ -108,6 +119,50 @@ while running:
 
     # draw the players car
     player_group.draw(screen)
+
+    #add up to two vehicles
+    if len(vehicle_group) < 2:
+
+        #ensure there's enough gap between vehicles
+        add_vehicle = True
+        for vehicle in vehicle_group:
+            if vehicle.rect.top < vehicle.rect.height * 1.5:
+                add_vehicle = False
+
+        if add_vehicle:
+
+            #select a random lane
+            lane = random.choice(lanes)
+
+            #select a random vehicle image
+            image = random.choice(vehicle_images)
+            vehicle = Vehicle(image, lane, height / -2)
+            vehicle_group.add(vehicle)
+
+
+    for vehicle in vehicle_group:
+        vehicle.rect.y += speed
+
+        #remove the vehicle once it goes off screen
+        if vehicle.rect.top >= height:
+            vehicle.kill()
+
+            #add to score
+            score += 1
+
+            # add speed to the game after passing 5 vehicles
+            if score > 0 and score % 5 == 0:
+                speed += 1
+
+    #draw the vehicles on screen
+    vehicle_group.draw(screen)
+
+    #display the score
+    font = pygame.font.Font(pygame.font.get_default_font(), 16)
+    text_surf = font.render('Score: '+ str(score), True, white)
+    text_rect = text_surf.get_rect()
+    text_rect.center = (50, 450)
+    screen.blit(text_surf, text_rect)
 
     pygame.display.update()
     clock.tick(60)
