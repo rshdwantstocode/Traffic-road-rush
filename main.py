@@ -16,6 +16,7 @@ green = (1, 50, 30)
 gray = (128,128,128)
 yellow = (255,255,0)
 white = (255,255,255)
+black = (0,0,0,0)
 
 # markers size
 markers_width = 10
@@ -29,7 +30,7 @@ right_edge_markers = (595, 0, markers_width, height)
 # x coordinates of lane
 left_lane = 280
 center_lane = 420
-right_lane = 550
+right_lane = 500
 lanes = [left_lane, center_lane, right_lane]
 
 # animation movement
@@ -65,7 +66,7 @@ player = PlayerVehicle(player_x, player_y)
 player_group.add(player)
 
 #load the vehicles
-image_filenames = ['car1.png', 'car3.jpg', 'semi_trailer.png', 'trailer_truck.png']
+image_filenames = ['car1.png', 'car3.jpg']
 vehicle_images = []
 for image_filename in image_filenames:
     image = pygame.image.load('cars/'+ image_filename)
@@ -73,6 +74,10 @@ for image_filename in image_filenames:
 
 #sprite group for vehicles
 vehicle_group = pygame.sprite.Group()
+
+# crash image
+crash = pygame.image.load('utils/crash.png')
+crash_rect = crash.get_rect()
 
 
 # game settings
@@ -93,10 +98,27 @@ while running:
 
     # move the players car using left/right arrow keys
         if event.type == pygame.KEYDOWN:
+
             if event.key == pygame.K_LEFT and player.rect.center[0] > left_lane:
                 player.rect.x -= 130
-            elif event.key == pygame.K_RIGHT and player.rect.center[1] < right_lane:
+            elif event.key == pygame.K_RIGHT and player.rect.center[0] < right_lane:
                 player.rect.x += 130
+
+            # check if there's a sideswipe collision after changing lanes
+            for vehicle in vehicle_group:
+                if pygame.sprite.collide_rect(player, vehicle):
+
+                    gameover = True
+
+                    #place the player's car next to the other vehicle
+                    #and determine where to position the crash image
+                    if event.key == pygame.K_LEFT:
+                        player.rect.left = vehicle.rect.right
+                        crash_rect.center = [player.rect.left, (player.rect.center[1] + vehicle.rect.center[1]) / 2]
+                    elif event.key == pygame.K_RIGHT:
+                        player.rect.right = vehicle.rect.left
+                        crash_rect.center = [player.rect.right, (player.rect.center[1] + vehicle.rect.center[1]) / 2]
+
 
 
     # draw grass
@@ -163,6 +185,24 @@ while running:
     text_rect = text_surf.get_rect()
     text_rect.center = (50, 450)
     screen.blit(text_surf, text_rect)
+
+    #check if there's a head on collision
+    if pygame.sprite.spritecollide(player, vehicle_group, True):
+        gameover = True
+        crash_rect.center = [player.rect.center[0], player.rect.top]
+
+    #display game over screen
+    if gameover:
+        screen.blit(crash, crash_rect)
+
+        pygame.draw.rect(screen, black, (0,50, width, 100))
+
+        font = pygame.font.Font(pygame.font.get_default_font(), 16)
+        text = font.render('Game over. Play again? (Enter Y or N)', True, white)
+        text_rect = text.get_rect()
+        text_rect.center = (width / 2, 100)
+        screen.blit(text, text_rect)
+
 
     pygame.display.update()
     clock.tick(60)
