@@ -90,10 +90,10 @@ clock = pygame.time.Clock()
 running = True
 
 while running:
+    clock.tick(60)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
             sys.exit()
 
     # move the players car using left/right arrow keys
@@ -203,6 +203,29 @@ while running:
         text_rect.center = (width / 2, 100)
         screen.blit(text, text_rect)
 
-
     pygame.display.update()
-    clock.tick(60)
+
+    #check if the playaer wants to play again
+    while gameover:
+        clock.tick(60)
+        for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    gameover = False
+                    running = False
+
+                #check for player input
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_y:
+                        #reset the game
+                        gameover = False
+                        speed = 2
+                        score = 0
+                        vehicle_group.empty()
+                        player.rect.center = [player_x, player_y]
+                    elif event.key == pygame.K_n:
+                        #exit the loop
+                        gameover = False
+                        running = False
+
+pygame.quit()
