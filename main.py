@@ -1,7 +1,7 @@
 import pygame
 import random
 import sys
-
+# from multiplayer.multiplayerClass import multiplayer
 
 pygame.init()
 # 800x480 5 inch rpi screen
@@ -113,17 +113,21 @@ score = 0
 
 # game loop
 clock = pygame.time.Clock()
+fps = 120
 game_active = False
+multiplayer_active = False
 running = True
 
+
 while running:
-    clock.tick(60)
+    clock.tick(fps)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
 
     # move the players car using left/right arrow keys
+        #check if the game is active before activating the keys
         if game_active:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT and player.rect.center[0] > left_lane:
@@ -133,6 +137,8 @@ while running:
         else:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 game_active = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_2:
+                multiplayer_active = True
 
             # check if there's a sideswipe collision after changing lanes
             for vehicle in vehicle_group:
@@ -150,7 +156,6 @@ while running:
                         crash_rect.center = [player.rect.right, (player.rect.center[1] + vehicle.rect.center[1]) / 2]
 
     if game_active:
-
         # draw grass
         screen.fill(green)
 
@@ -178,7 +183,7 @@ while running:
             #ensure there's enough gap between vehicles
             add_vehicle = True
             for vehicle in vehicle_group:
-                if vehicle.rect.top < vehicle.rect.height * 1.5:
+                if vehicle.rect.top < vehicle.rect.height:
                     add_vehicle = False
 
             if add_vehicle:
@@ -237,7 +242,7 @@ while running:
 
         #check if the playaer wants to play again
         while gameover:
-            clock.tick(60)
+            clock.tick(fps)
             for event in pygame.event.get():
 
                     if event.type == pygame.QUIT:
@@ -260,6 +265,8 @@ while running:
                             score = 0
                             speed = 2
                             #running = False
+    # elif multiplayer_active: multiplayer
+    #     # multiplayer()
     else:
         animationMenu()
         screen.fill((128, 0, 0))
