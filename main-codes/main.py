@@ -1,7 +1,7 @@
 import pygame
 import random
 import sys
-# from multiplayer.multiplayerClass import multiplayer
+#from multiplayerClass import multiplayer
 
 pygame.init()
 # 800x480 5 inch rpi screen
@@ -53,12 +53,15 @@ class Vehicle(pygame.sprite.Sprite):
 
 class PlayerVehicle(Vehicle):
     def __init__(self, x, y):
-        image = pygame.image.load('cars/AE86.png')
+        image = pygame.image.load('../cars/AE86.png')
         super().__init__(image, x, y)
 
+
 #text in main menu
-title_font = pygame.font.Font('font/Pixeltype.ttf', 60)
-space_font = pygame.font.Font('font/Pixeltype.ttf', 40)
+game_font = '../font/Pixeltype.ttf'
+title_font = pygame.font.Font(game_font, 60)
+space_font = pygame.font.Font(game_font, 40)
+
 main_text = title_font.render('Traffic Road Rush', False, white)
 main_text_rect = main_text.get_rect(center=(400, 100))
 
@@ -82,27 +85,30 @@ def animationMenu():
     # Apply alpha to the space text surface
     space_text.set_alpha(alpha_value)
 
+
 # Player's starting coordinates
 player_x = 400
 player_y = 430
 
 # create the player's car
-player_group = pygame.sprite.Group()
 player = PlayerVehicle(player_x, player_y)
+player_group = pygame.sprite.Group()
 player_group.add(player)
 
 #load the vehicles
 image_filenames = ['car1.png', 'car3.jpg']
 vehicle_images = []
 for image_filename in image_filenames:
-    image = pygame.image.load('cars/'+ image_filename)
+    image = pygame.image.load('../cars/'+ image_filename)
     vehicle_images.append(image)
 
 #sprite group for vehicles
 vehicle_group = pygame.sprite.Group()
 
+
+
 # crash image
-crash = pygame.image.load('utils/crash.png')
+crash = pygame.image.load('../utils/crash.png')
 crash_rect = crash.get_rect()
 
 
@@ -115,7 +121,7 @@ score = 0
 clock = pygame.time.Clock()
 fps = 120
 game_active = False
-multiplayer_active = False
+# multiplayer_active = False
 running = True
 
 
@@ -137,8 +143,8 @@ while running:
         else:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 game_active = True
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_2:
-                multiplayer_active = True
+            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_2:
+            #     multiplayer_active = True
 
             # check if there's a sideswipe collision after changing lanes
             for vehicle in vehicle_group:
@@ -199,7 +205,6 @@ while running:
 
         for vehicle in vehicle_group:
             vehicle.rect.y += speed
-
             #remove the vehicle once it goes off screen
             if vehicle.rect.top >= height:
                 vehicle.kill()
@@ -265,8 +270,8 @@ while running:
                             score = 0
                             speed = 2
                             #running = False
-    # elif multiplayer_active: multiplayer
-    #     # multiplayer()
+    # elif multiplayer_active: #multiplayer
+    #         multiplayer()
     else:
         animationMenu()
         screen.fill((128, 0, 0))
