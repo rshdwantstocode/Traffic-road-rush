@@ -120,7 +120,7 @@ def multiplayer():
 
     class RoadTwo:
         def __init__(self):
-            self.road_rect = pygame.Rect(400, 0, 350, height)
+            self.road_rect = pygame.Rect(400, 0, 360, height)
             self.left_edge_markers = pygame.Rect(400, 0, 10, height)
             self.right_edge_markers = pygame.Rect(750, 0, 10, height)
 
@@ -132,7 +132,7 @@ def multiplayer():
             # Lane positions
             self.left_lane = 460
             self.center_lane = 590
-            self.right_lane = 650
+            self.right_lane = 700
             self.lanes = [self.left_lane, self.center_lane, self.right_lane]
 
             # Road animation speed
@@ -205,24 +205,40 @@ def multiplayer():
         def check_collision(self):
             # Check for collision between player and any vehicle in vehicle_group_one
             if pygame.sprite.spritecollide(self.player, vehicle_group_one, False):
-                print("Collision detected!")
+                # print("Collision detected!")
+                road_One.speed = 0
+                self.speed = 0
+
+                # Display the crash image at the player's location
+                crash_rect.center = self.player.rect.center
+                screen.blit(crash, crash_rect)
+
+                pygame.draw.rect(screen, black, (50, 50, 360, 100))
+
+                font = pygame.font.Font(pygame.font.get_default_font(), 16)
+                text = font.render('Game Over', True, white)
+                text_rect = text.get_rect()
+                text_rect.center = (220, 100)
+                screen.blit(text, text_rect)
+
                 return True
+
             return False
 
         def show_score(self):
             # display the score
             font = pygame.font.Font(pygame.font.get_default_font(), 16)
-            text_surf = font.render('Score: ' + str(self.score), True, white)
+            text_surf = font.render('Score: ' + str(self.score), True, black)
             text_rect = text_surf.get_rect()
-            text_rect.center = (50, 450)
+            text_rect.center = (100, 100)
             screen.blit(text_surf, text_rect)
 
 
     class Obstacle_RoadTwo:
         def __init__(self):
-            self.speed = 1
+            self.speed = 2
             self.score = 0
-            self.lanes = [road_Two.left_lane, road_Two.center_lane, road_Two.right_lane]
+            self.lanes = [460, 580, 700]
             self.player = player_two
             # add up to two vehicles
 
@@ -252,12 +268,46 @@ def multiplayer():
                     # add to score
                     self.score += 1
 
-                    # add speed to the game after passing 5 vehicles
-                    # if self.score > 0 and self.score % 5 == 0:
-                    #     self.speed += 1
+                    #add speed to the game after passing 5 vehicles
+                    if self.score > 0 and self.score % 5 == 0:
+                        self.speed += 1
+                        road_Two.speed += 1
 
             # draw the vehicles on screen
             vehicle_group_two.draw(screen)
+
+            # checks collision
+        def check_collision(self):
+            # Check for collision between player and any vehicle in vehicle_group_one
+            if pygame.sprite.spritecollide(self.player, vehicle_group_two, False):
+                # print("Collision detected!")
+                road_Two.speed = 0
+                self.speed = 0
+
+                # Display the crash image at the player's location
+                crash_rect.center = self.player.rect.center
+                screen.blit(crash, crash_rect)
+
+                pygame.draw.rect(screen, black, (390, 50, 360, 100))
+
+                font = pygame.font.Font(pygame.font.get_default_font(), 16)
+                text = font.render('Game Over', True, white)
+                text_rect = text.get_rect()
+                text_rect.center = (580, 100)
+                screen.blit(text, text_rect)
+
+                return True
+
+            return False
+
+        def show_score(self):
+            # display the score
+            font = pygame.font.Font(pygame.font.get_default_font(), 16)
+            text_surf = font.render('Score: ' + str(self.score), True, black)
+            text_rect = text_surf.get_rect()
+            text_rect.center = (500, 100)
+            screen.blit(text_surf, text_rect)
+
 
     # Create an instance of the Road class
     # roadOne
@@ -268,28 +318,34 @@ def multiplayer():
 
     # Main game loop
     running = True
+    player_one_active = True  # Player 1's state
+    player_two_active = True  # Player 2's state
     clock = pygame.time.Clock()
     fps = 120
 
     while running:
         clock.tick(fps)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
             # movement keys player One
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_a and player_one.rect.center[0] > road_One.left_lane:
-                    player_one.rect.x -= 130
-                elif event.key == pygame.K_d and player_one.rect.center[0] < road_One.right_lane:
-                    player_one.rect.x += 130
+            if player_one_active:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_a and player_one.rect.center[0] > road_One.left_lane:
+                        player_one.rect.x -= 130
+                    elif event.key == pygame.K_d and player_one.rect.center[0] < road_One.right_lane:
+                        player_one.rect.x += 130
 
                 # player two
-                if event.key == pygame.K_LEFT and player_two.rect.center[0] > road_Two.left_lane:
-                    player_two.rect.x -= 130
-                elif event.key == pygame.K_RIGHT and player_two.rect.center[0] < road_Two.right_lane:
-                    player_two.rect.x += 130
+            if player_two_active:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT and player_two.rect.center[0] > road_Two.left_lane:
+                        player_two.rect.x -= 130
+                    elif event.key == pygame.K_RIGHT and player_two.rect.center[0] < road_Two.right_lane:
+                        player_two.rect.x += 130
 
         screen.fill(green)
 
@@ -300,11 +356,19 @@ def multiplayer():
         obstacles_two.draw(screen)
 
         # Check for collision on road one
+        # if (obstacles_one.check_collision() and obstacles_two.check_collision()) or (obstacles_two.check_collision() and obstacles_one.check_collision()):
+        #     print(obstacles_one.show_score())
+        #     print(obstacles_two.show_score())
+        #     # Handle collision
+        #     running = False
         if obstacles_one.check_collision():
-            # Handle collision (e.g., end game, reduce health, etc.)
-            running = False  # Example: stop the game on collision
+            player_one_active = False
+
+        if obstacles_two.check_collision():
+            player_two_active = False
 
         obstacles_one.show_score()
+        obstacles_two.show_score()
 
         # draw the players car
         player_group.draw(screen)
