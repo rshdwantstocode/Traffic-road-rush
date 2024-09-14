@@ -1,7 +1,7 @@
 import pygame
 import random
 import sys
-#from multiplayerClass import multiplayer
+from multiplayerClass import multiplayer
 
 pygame.init()
 # 800x480 5 inch rpi screen
@@ -121,13 +121,12 @@ score = 0
 clock = pygame.time.Clock()
 fps = 120
 game_active = False
-# multiplayer_active = False
+multiplayer_active = False
 running = True
 
 
 while running:
     clock.tick(fps)
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
@@ -143,8 +142,8 @@ while running:
         else:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 game_active = True
-            # elif event.type == pygame.KEYDOWN and event.key == pygame.K_2:
-            #     multiplayer_active = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_2:
+                multiplayer_active = True
 
             # check if there's a sideswipe collision after changing lanes
             for vehicle in vehicle_group:
@@ -249,7 +248,6 @@ while running:
         while gameover:
             clock.tick(fps)
             for event in pygame.event.get():
-
                     if event.type == pygame.QUIT:
                         gameover = False
                         running = False
@@ -270,8 +268,10 @@ while running:
                             score = 0
                             speed = 2
                             #running = False
-    # elif multiplayer_active: #multiplayer
-    #         multiplayer()
+    elif multiplayer_active: #multiplayer
+        # print(multiplayer_active)
+        multiplayer()
+
     else:
         animationMenu()
         screen.fill((128, 0, 0))
