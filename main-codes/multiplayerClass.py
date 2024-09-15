@@ -1,6 +1,7 @@
 import pygame
 import random
 import sys
+# from main import gameover, game_active
 
 pygame.init()
 
@@ -340,7 +341,7 @@ def multiplayer():
 
     # Main game loop
     running = True
-    game_active = True
+    game_active_multi = True
     gameOver = False
     player_one_active = True  # Player 1's state
     player_two_active = True  # Player 2's state
@@ -371,7 +372,7 @@ def multiplayer():
                     elif event.key == pygame.K_RIGHT and player_two.rect.center[0] < road_Two.right_lane:
                         player_two.rect.x += 130
 
-        if game_active:
+        if game_active_multi:
             screen.fill(green)
 
             # Draw the road
@@ -407,11 +408,28 @@ def multiplayer():
                 screen.blit(crash, crash_rect)
 
                 pygame.draw.rect(screen, black, (0, 0, width, height))
+                player_font = pygame.font.Font('../font/Pixeltype.ttf', 50)
+
+                if obstacles_one.score > obstacles_two.score:
+                    player_text = player_font.render('Player 1 wins', False, white)
+                    player_text_rect = player_text.get_rect()
+                    player_text_rect.center = (width / 2, 100)
+                    screen.blit(player_text, player_text_rect)
+                elif obstacles_one.score == obstacles_two.score:
+                    player_text = player_font.render('Draw', False, white)
+                    player_text_rect = player_text.get_rect()
+                    player_text_rect.center = (width / 2, 100)
+                    screen.blit(player_text, player_text_rect)
+                else:
+                    player_text = player_font.render('Player 2 wins', False, white)
+                    player_text_rect = player_text.get_rect()
+                    player_text_rect.center = (width / 2, 100)
+                    screen.blit(player_text, player_text_rect)
 
                 font = pygame.font.Font(pygame.font.get_default_font(), 16)
-                text = font.render('Game over. Play again? (Enter Y or N)', True, white)
+                text = font.render('Play again? (Enter Y or N)', True, white)
                 text_rect = text.get_rect()
-                text_rect.center = (width / 2, 100)
+                text_rect.center = (width / 2, 200)
                 screen.blit(text, text_rect)
 
             pygame.display.update()
@@ -426,22 +444,29 @@ def multiplayer():
                     # check for player input
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_y:
-                            # reset the game
-                            # gameOver = False
                             print('Yes')
-                            multiplayer()
-                            speed = 2
-                            score = 0
-                            # vehicle_group.empty()
-                            # player.rect.center = [player_x, player_y]
+                            gameOver = False
+                            player_one_active = True
+                            player_two_active = True
+                            # Reset the player positions and speeds
+                            player_one.rect.center = [playerOne_x, playerOne_y]
+                            player_two.rect.center = [playerTwo_x, playerTwo_y]
+                            obstacles_one.speed = 2
+                            obstacles_one.score = 0
+                            obstacles_two.speed = 2
+                            obstacles_two.score = 0
+                            # Clear the vehicle groups
+                            vehicle_group_one.empty()
+                            vehicle_group_two.empty()
+                            # Reset the road speeds
+                            road_One.speed = 2
+                            road_Two.speed = 2
+                            # Continue the game
+                            game_active_multi = True
                         elif event.key == pygame.K_n:
                             # exit the loop
                             print("No")
-                            # gameOver = False
-                            # game_active = False
-                            score = 0
-                            speed = 2
-                            # running = False
+                            return
 
             # Update the display
             pygame.display.update()
