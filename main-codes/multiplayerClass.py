@@ -348,6 +348,9 @@ def multiplayer():
     clock = pygame.time.Clock()
     fps = 120
 
+    #controller
+    joysticks = {}
+
     while running:
         clock.tick(fps)
 
@@ -371,6 +374,23 @@ def multiplayer():
                         player_two.rect.x -= 130
                     elif event.key == pygame.K_RIGHT and player_two.rect.center[0] < road_Two.right_lane:
                         player_two.rect.x += 130
+
+            # if event.type == pygame.JOYDEVICEADDED:
+            #     # This event will be generated when the program starts for every
+            #     # joystick, filling up the list without needing to create them manually.
+            #     joy = pygame.joystick.Joystick(event.device_index)
+            #     joysticks[joy.get_instance_id()] = joy
+            #     print(f"Joystick {joy.get_instance_id()} connencted")
+            #
+            # if event.type == pygame.JOYBUTTONDOWN:
+            #     print("Joystick button pressed.")
+            #     if event.button == 0:
+            #         joystick = joysticks[event.instance_id]
+            #         if joystick.rumble(0, 0.7, 500):
+            #             print(f"Rumble effect played on joystick {event.instance_id}")
+            #
+            # if event.type == pygame.JOYBUTTONUP:
+            #     print("Joystick button released.")
 
         if game_active_multi:
             screen.fill(green)

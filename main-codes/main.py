@@ -4,6 +4,9 @@ import sys
 from multiplayerClass import multiplayer
 
 pygame.init()
+#initialise the joystick module
+pygame.joystick.init()
+
 # 800x480 5 inch rpi screen
 width = 800
 height = 480
@@ -48,7 +51,7 @@ def singlePlayer():
             pygame.sprite.Sprite.__init__(self)
 
             #scale the image so it fits in the lane
-            image_scale = 45 / image.get_rect().width
+            image_scale = 50 / image.get_rect().width
             new_width = image.get_rect().width * image_scale
             new_height = image.get_rect().height * image_scale
             self.image = pygame.transform.scale(image, (new_width, new_height))
@@ -76,7 +79,7 @@ def singlePlayer():
 
 
     def animationMenu():
-        global alpha_value, fade_in
+        global alpha_value, fade_in, joystick
         if fade_in:
             alpha_value += 10  # Increase alpha to fade in
             if alpha_value >= 255:  # Fully opaque, start fading out
@@ -102,7 +105,7 @@ def singlePlayer():
     player_group.add(player)
 
     #load the vehicles
-    image_filenames = ['car1.png', 'car3.jpg']
+    image_filenames = ['car1.png', 'car3.png', 'car5.png']
     vehicle_images = []
     for image_filename in image_filenames:
         image = pygame.image.load('../cars/'+ image_filename)
@@ -129,6 +132,9 @@ def singlePlayer():
     game_active = False
     multiplayer_active = False
     running = True
+
+    #controllers
+    joysticks = {}
 
 
     while running:
@@ -166,6 +172,45 @@ def singlePlayer():
                             player.rect.right = vehicle.rect.left
                             crash_rect.center = [player.rect.right, (player.rect.center[1] + vehicle.rect.center[1]) / 2]
 
+            if event.type == pygame.JOYDEVICEADDED:
+                # This event will be generated when the program starts for every
+                # joystick, filling up the list without needing to create them manually.
+                joy = pygame.joystick.Joystick(event.device_index)
+                joysticks[joy.get_instance_id()] = joy
+                print(f"Joystick {joy.get_instance_id()} connencted")
+
+            if event.type == pygame.JOYBUTTONDOWN:
+                print("Joystick button pressed.")
+                if event.button == 0:
+                    joystick = joysticks[event.instance_id]
+                    if joystick.rumble(0, 0.7, 500):
+                        print(f"Rumble effect played on joystick {event.instance_id}")
+
+            if event.type == pygame.JOYBUTTONUP:
+                print("Joystick button released.")
+
+        for joystick in joysticks.values():
+            if joystick.get_button(9):  # Correct usage, checking button 9 (the integer index)
+                game_active = True
+
+            horizontal_move = joystick.get_axis(0)
+            player.rect.x += horizontal_move * 5
+            vertical_move = joystick.get_axis(1)
+            player.rect.y += vertical_move * 5
+
+            # Ensure the player stays within the road boundaries
+            if player.rect.left < 200:  # Left road boundary
+                player.rect.left = 200
+            elif player.rect.right > 595:  # Right road boundary
+                player.rect.right = 595
+
+            if player.rect.top < 0:
+                player.rect.top = 0
+            elif player.rect.bottom > height:
+                player.rect.bottom = height
+
+
+
         if game_active:
             # draw grass
             screen.fill(green)
@@ -188,7 +233,7 @@ def singlePlayer():
             # draw the players car
             player_group.draw(screen)
 
-            #add up to two vehicles
+            # #add up to two vehicles
             if len(vehicle_group) < 2:
 
                 #ensure there's enough gap between vehicles
@@ -200,7 +245,7 @@ def singlePlayer():
                 if add_vehicle:
 
                     #select a random lane
-                    lane = random.choice(lanes)
+                    lane = random.choice((263, 405, 540))
 
                     #select a random vehicle image
                     image = random.choice(vehicle_images)
@@ -243,7 +288,7 @@ def singlePlayer():
                 pygame.draw.rect(screen, black, (0,50, width, 100))
 
                 font = pygame.font.Font(pygame.font.get_default_font(), 16)
-                text = font.render('Game over. Play again? (Enter Y or N)', True, white)
+                text = font.render('Game over. Play again? Enter A to play again, B to quit', True, white)
                 text_rect = text.get_rect()
                 text_rect.center = (width / 2, 100)
                 screen.blit(text, text_rect)
@@ -276,11 +321,30 @@ def singlePlayer():
                                 vehicle_group.empty()
                                 player.rect.center = [player_x, player_y]
                                 #running = False
+                for joystick in joysticks.values():
+                    if joystick.get_button(1):
+                        # reset the game
+                        gameover = False
+                        speed = 2
+                        score = 0
+                        vehicle_group.empty()
+                        player.rect.center = [player_x, player_y]
+                    elif joystick.get_button(0):
+                        # exit the loop
+                        gameover = False
+                        game_active = False
+                        score = 0
+                        speed = 2
+                        vehicle_group.empty()
+                        player.rect.center = [player_x, player_y]
+                        # running = False
+
         elif multiplayer_active: #multiplayer
             # print(multiplayer_active
             multiplayer()
             multiplayer_active = False
-
+        elif joystick.get_button(8):
+            print('hello 8')
         else:
             animationMenu()
             screen.fill((128, 0, 0))
