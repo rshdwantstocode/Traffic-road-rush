@@ -13,6 +13,16 @@ joystick_two = pygame.joystick.Joystick(1)
 # Detect joysticks (controllers)
 # joysticks = []
 
+# Initialize Pygame mixer
+pygame.mixer.init()
+
+sound_files = ['../sound/player1.mp3', '../sound/player2.mp3', '../sound/Draw.mp3']
+
+def sound_result(num):
+    pygame.mixer.music.load(sound_files[num])
+    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.play(loops=1)
+
 
 # Constants for the screen size
 width = 800
@@ -50,7 +60,7 @@ def multiplayer():
 
     class PlayerVehicle_Two(Vehicle):
         def __init__(self, x, y):
-            image_import = pygame.image.load('../cars/AE86.png')
+            image_import = pygame.image.load('../cars/player2.png')
             # player2_width = 5000
             # player2_height = 10000
             # image = pygame.transform.scale(image_import, (player2_width, player2_height))
@@ -62,7 +72,7 @@ def multiplayer():
 
     # Player Two
     playerTwo_x = 580
-    playerTwo_y = 430
+    playerTwo_y = 422
 
     # create the player's car
     player_group = pygame.sprite.Group()
@@ -493,7 +503,7 @@ def multiplayer():
             if gameOver:
                 screen.blit(crash, crash_rect)
 
-                pygame.draw.rect(screen, black, (0, 0, width, height))
+                pygame.draw.rect(screen, (2, 21, 38), (0, 0, width, height))
                 player_font = pygame.font.Font('../font/Pixeltype.ttf', 50)
 
                 if obstacles_one.score > obstacles_two.score:
@@ -501,16 +511,19 @@ def multiplayer():
                     player_text_rect = player_text.get_rect()
                     player_text_rect.center = (width / 2, 100)
                     screen.blit(player_text, player_text_rect)
+                    sound_result(0)
                 elif obstacles_one.score == obstacles_two.score:
                     player_text = player_font.render('Draw', False, white)
                     player_text_rect = player_text.get_rect()
                     player_text_rect.center = (width / 2, 100)
                     screen.blit(player_text, player_text_rect)
+                    sound_result(2)
                 else:
                     player_text = player_font.render('Player 2 wins', False, white)
                     player_text_rect = player_text.get_rect()
                     player_text_rect.center = (width / 2, 100)
                     screen.blit(player_text, player_text_rect)
+                    sound_result(1)
 
                 font = pygame.font.Font(pygame.font.get_default_font(), 16)
                 text = font.render('(Enter A to play again or B to quit)', True, white)
@@ -553,7 +566,7 @@ def multiplayer():
                             # exit the loop
                             print("No")
                             return
-                if joystick_one.get_button(1) or joystick_two.get_button(2):
+                if joystick_one.get_button(1) or joystick_two.get_button(1):
                     print('Yes')
                     gameOver = False
                     player_one_active = True
@@ -573,7 +586,7 @@ def multiplayer():
                     road_Two.speed = 4
                     # Continue the game
                     game_active_multi = True
-                elif joystick_one.get_button(0) or joystick_two.get_button(1):
+                elif joystick_one.get_button(0) or joystick_two.get_button(0):
                     # exit the loop
                     print("No")
                     return
