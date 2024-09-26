@@ -33,9 +33,9 @@ pygame.display.set_caption('Traffic Road Rush')
 # game color
 green = (1, 50, 30)
 gray = (128, 128, 128)
-yellow = (255,255,0)
-white = (255,255,255)
-black = (0,0,0,0)
+yellow = (255, 255, 0)
+white = (255, 255, 255)
+black = (0, 0, 0, 0)
 
 alpha_value = 0  # Starting transparency (0 = fully transparent)
 fade_in = True
@@ -89,25 +89,49 @@ def singlePlayer():
     main_text = title_font.render('Traffic Road Rush', False, white)
     main_text_rect = main_text.get_rect(center=(400, 100))
 
-    space_text = space_font.render('Press "SPACE" to start the game', False, white)
-    space_text_rect = space_text.get_rect(center=(400, 300))
+    # space_text = space_font.render('Press "START" to start the game', False, white)
+    # space_text_rect = space_text.get_rect(center=(400, 300))
+    #
+    # quit_text = space_font.render('Press "SELECT" to quit', False, white)
+    # quit_text_rect = space_text.get_rect(center=(450, 380))
 
 
-    def animationMenu():
-        global alpha_value, fade_in, joystick
-        if fade_in:
-            alpha_value += 10  # Increase alpha to fade in
-            if alpha_value >= 255:  # Fully opaque, start fading out
-                alpha_value = 255
-                fade_in = False
-        else:
-            alpha_value -= 10  # Decrease alpha to fade out
-            if alpha_value <= 0:  # Fully transparent, start fading in
-                alpha_value = 0
-                fade_in = True
+    # def animationMenu():
+    #     global alpha_value, fade_in, joystick
+    #     if fade_in:
+    #         alpha_value += 10  # Increase alpha to fade in
+    #         if alpha_value >= 255:  # Fully opaque, start fading out
+    #             alpha_value = 255
+    #             fade_in = False
+    #     else:
+    #         alpha_value -= 10  # Decrease alpha to fade out
+    #         if alpha_value <= 0:  # Fully transparent, start fading in
+    #             alpha_value = 0
+    #             fade_in = True
+    #
+    #     # Apply alpha to the space text surface
+    #     space_text.set_alpha(alpha_value)
+    #     quit_text.set_alpha(alpha_value)
 
-        # Apply alpha to the space text surface
-        space_text.set_alpha(alpha_value)
+    # Menu options
+    menu_options = ["Single Player", "Multiplayer", "Quit"]
+    selected_option = 0  # Index for the current selection
+    cooldown = 0
+    icon = pygame.image.load('../cars/wheel.png')
+    icon = pygame.transform.scale(icon, (30, 30))
+
+    def draw_menu():
+        screen.fill((2, 21, 38))  # Fill background
+        screen.blit(main_text, main_text_rect)
+        for idx, option in enumerate(menu_options):
+            label = title_font.render(option, True, (110, 172, 218) if idx == selected_option else (255, 255, 255))
+            screen.blit(label, (250, 200 + idx * 60))
+
+            # Display the icon next to the selected option
+            if idx == selected_option:
+                screen.blit(icon, (205, 200 + idx * 60))
+
+        pygame.display.flip()
 
 
     # Player's starting coordinates
@@ -211,10 +235,10 @@ def singlePlayer():
             #     print("Joystick button released.")
 
         for joystick in joysticks.values():
-            if joystick_one.get_button(9):  # Correct usage, checking button 9 (the integer index)
-                game_active = True
-            if joystick_one.get_button(8):
-                game_active = False
+            # if joystick_one.get_button(9):  # Correct usage, checking button 9 (the integer index)
+            #     game_active = True
+            # if joystick_one.get_button(8):
+            #     game_active = False
 
             horizontal_move = joystick_one.get_axis(0)
             player.rect.x += horizontal_move * 5
@@ -306,14 +330,21 @@ def singlePlayer():
 
             #display game over screen
             if gameover:
+
                 screen.blit(crash, crash_rect)
 
-                pygame.draw.rect(screen, black, (0,50, width, 100))
+                pygame.draw.rect(screen, black, (0,50, width, 150))
 
                 font = pygame.font.Font(pygame.font.get_default_font(), 16)
                 text = font.render('Game over. Play again? Enter A to play again, B to quit', True, white)
                 text_rect = text.get_rect()
                 text_rect.center = (width / 2, 100)
+
+                score_text = font.render('Score: ' + str(score), True, white)
+                score_text_rect = score_text.get_rect()
+                score_text_rect.center = (width / 2, 150)
+
+                screen.blit(score_text, score_text_rect)
                 screen.blit(text, text_rect)
 
             pygame.display.update()
@@ -371,12 +402,41 @@ def singlePlayer():
             multiplayer()
             multiplayer_active = False
         else:
-            animationMenu()
-            screen.fill((128, 0, 0))
-            screen.blit(main_text, main_text_rect)
-            screen.blit(space_text, space_text_rect)
-            player.rect.center = [player_x, player_y]
+            # animationMenu()
+            # screen.fill((128, 0, 0))
+            # screen.blit(main_text, main_text_rect)
+            # screen.blit(space_text, space_text_rect)
+            # screen.blit(quit_text, quit_text_rect)
+            draw_menu()
 
+            # Get vertical axis movement (axis 1)
+            vertical_move = joystick_one.get_axis(1)
+
+            # Cooldown to prevent rapid selection change
+            if cooldown == 0:
+                if vertical_move > 0.5:  # Down movement
+                    selected_option = (selected_option + 1) % len(menu_options)
+                    cooldown = 15  # Set cooldown for smoother navigation
+                elif vertical_move < -0.5:  # Up movement
+                    selected_option = (selected_option - 1) % len(menu_options)
+                    cooldown = 15
+
+            # Execute action if button is pressed (e.g., button 9 to select)
+            if joystick_one.get_button(1):
+                if selected_option == 0:  # Single Player
+                    game_active = True
+                elif selected_option == 1:  # Multiplayer
+                    print("Starting Multiplayer...")
+                    multiplayer_active = True
+                elif selected_option == 2:  # Quit
+                    pygame.quit()
+                    sys.exit()
+
+            # Cooldown countdown
+        if cooldown > 0:
+            cooldown -= 1
+
+            player.rect.center = [player_x, player_y]
 
         pygame.display.update()
 
