@@ -17,11 +17,22 @@ joystick_two = pygame.joystick.Joystick(1)
 pygame.mixer.init()
 
 sound_files = ['../sound/player1.mp3', '../sound/player2.mp3', '../sound/Draw.mp3']
+crash_soundFX = pygame.mixer.Sound('../sound/crash.mp3')
 
 def sound_result(num):
     pygame.mixer.music.load(sound_files[num])
-    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.set_volume(0.5)
     pygame.mixer.music.play(loops=1)
+
+
+def crash_sound():
+    # crash sound
+    crash_soundFX.set_volume(0.3)
+    crash_soundFX.play()
+
+
+play_time_1 = 0
+play_time_2 = 0
 
 
 # Constants for the screen size
@@ -38,7 +49,7 @@ yellow = (255, 255, 0)
 white = (255, 255, 255)
 black = (0, 0, 0, 0)
 
-def multiplayer():
+def multiplayer(play_time_1, play_time_2):
     class Vehicle(pygame.sprite.Sprite):
 
         def __init__(self, image, x, y, vehicle_scale = 1.2):
@@ -228,8 +239,8 @@ def multiplayer():
 
                     #add speed to the game after passing 5 vehicles
                     if self.score > 0 and self.score % 5 == 0:
-                        self.speed += 0.5
-                        road_One.speed += 0.5
+                        self.speed += 0.7
+                        road_One.speed += 0.7
 
             # draw the vehicles on screen
             vehicle_group_one.draw(screen)
@@ -250,8 +261,7 @@ def multiplayer():
 
                 font = pygame.font.Font(pygame.font.get_default_font(), 16)
                 text = font.render('Game Over', True, white)
-                text_rect = text.get_rect()
-                text_rect.center = (220, 100)
+                text_rect = text.get_rect(center=(220, 100))
                 screen.blit(text, text_rect)
 
                 return True
@@ -303,8 +313,8 @@ def multiplayer():
 
                     #add speed to the game after passing 5 vehicles
                     if self.score > 0 and self.score % 5 == 0:
-                        self.speed += 0.5
-                        road_Two.speed += 0.5
+                        self.speed += 0.7
+                        road_Two.speed += 0.7
 
             # draw the vehicles on screen
             vehicle_group_two.draw(screen)
@@ -325,31 +335,8 @@ def multiplayer():
 
                 font = pygame.font.Font(pygame.font.get_default_font(), 16)
                 text = font.render('Game Over', True, white)
-                text_rect = text.get_rect()
-                text_rect.center = (580, 100)
+                text_rect = text.get_rect(center=(580,100))
                 screen.blit(text, text_rect)
-
-                #result after crash
-                # if player_one_active:
-                #     if obstacles_two.score > obstacles_one.score:
-                #         font = pygame.font.Font(pygame.font.get_default_font(), 16)
-                #         text = font.render('Game Over', True, white)
-                #         text_rect = text.get_rect()
-                #         text_rect.center = (580, 200)
-                #         screen.blit(text, text_rect)
-                #         print('player 2 win')
-                #     else:
-                #         print('player 2 lose')
-                # else:
-                #     if obstacles_two.score > obstacles_one.score:
-                #         font = pygame.font.Font(pygame.font.get_default_font(), 16)
-                #         text = font.render('you win', True, white)
-                #         text_rect = text.get_rect()
-                #         text_rect.center = (580, 200)
-                #         screen.blit(text, text_rect)
-                #         print('player 2 win')
-                #     else:
-                #         print('player 2 lose')
 
                 return True
 
@@ -359,8 +346,7 @@ def multiplayer():
             # display the score
             font = pygame.font.Font(pygame.font.get_default_font(), 16)
             text_surf = font.render('Score: ' + str(self.score), True, black)
-            text_rect = text_surf.get_rect()
-            text_rect.center = (500, 50)
+            text_rect = text_surf.get_rect(center=(450, 50))
             screen.blit(text_surf, text_rect)
 
 
@@ -423,10 +409,6 @@ def multiplayer():
                         print(f"Rumble effect played on joystick {event.instance_id}")
         # joysticks
         if player_one_active:
-            # for joystick_one in joysticks.values():
-            if joystick_one.get_button(9):  # Correct usage, checking button 9 (the integer index)
-                print("Hello")
-                game_active = True
 
             horizontal_move = joystick_one.get_axis(0)
             player_one.rect.x += horizontal_move * 5
@@ -445,11 +427,6 @@ def multiplayer():
                 player_one.rect.bottom = height
 
         if player_two_active:
-            # for joystick_two in joysticks.values():
-            if joystick_two.get_button(9):  # Correct usage, checking button 9 (the integer index)
-                print("Hello")
-                game_active = True
-
             horizontal_move = joystick_two.get_axis(0)
             player_two.rect.x += horizontal_move * 5
             vertical_move = joystick_two.get_axis(1)
@@ -483,17 +460,18 @@ def multiplayer():
             # draw the players car
             player_group.draw(screen)
 
-            # Check for collision on road one
-            # if (obstacles_one.check_collision() and obstacles_two.check_collision()) or (obstacles_two.check_collision() and obstacles_one.check_collision()):
-            #     print(obstacles_one.show_score())
-            #     print(obstacles_two.show_score())
-            #     # Handle collision
-            #     running = False
             if obstacles_one.check_collision():
+                if play_time_1 <= 0:
+                    crash_sound()
+                    play_time_1 += 1
+
                 player_one_active = False
 
-
             if obstacles_two.check_collision():
+                if play_time_2 <= 0:
+                    crash_sound()
+                    play_time_2 += 1
+
                 player_two_active = False
 
             if player_one_active == False and player_two_active == False:
@@ -508,27 +486,23 @@ def multiplayer():
 
                 if obstacles_one.score > obstacles_two.score:
                     player_text = player_font.render('Player 1 wins', False, white)
-                    player_text_rect = player_text.get_rect()
-                    player_text_rect.center = (width / 2, 100)
+                    player_text_rect = player_text.get_rect(center=(width / 2, 100))
                     screen.blit(player_text, player_text_rect)
                     sound_result(0)
                 elif obstacles_one.score == obstacles_two.score:
                     player_text = player_font.render('Draw', False, white)
-                    player_text_rect = player_text.get_rect()
-                    player_text_rect.center = (width / 2, 100)
+                    player_text_rect = player_text.get_rect(center=(width / 2, 100))
                     screen.blit(player_text, player_text_rect)
                     sound_result(2)
                 else:
                     player_text = player_font.render('Player 2 wins', False, white)
-                    player_text_rect = player_text.get_rect()
-                    player_text_rect.center = (width / 2, 100)
+                    player_text_rect = player_text.get_rect(center=(width / 2, 100))
                     screen.blit(player_text, player_text_rect)
                     sound_result(1)
 
                 font = pygame.font.Font(pygame.font.get_default_font(), 16)
                 text = font.render('(Enter A to play again or B to quit)', True, white)
-                text_rect = text.get_rect()
-                text_rect.center = (width / 2, 200)
+                text_rect = text.get_rect(center=(width / 2, 200))
                 screen.blit(text, text_rect)
 
             pygame.display.update()
@@ -560,6 +534,9 @@ def multiplayer():
                             # Reset the road speeds
                             road_One.speed = 4
                             road_Two.speed = 4
+                            print(play_time_1)
+                            play_time_1 = 0
+                            play_time_2 = 0
                             # Continue the game
                             game_active_multi = True
                         elif event.key == pygame.K_n:
@@ -568,24 +545,25 @@ def multiplayer():
                             return
                 if joystick_one.get_button(1) or joystick_two.get_button(1):
                     print('Yes')
-                    gameOver = False
-                    player_one_active = True
-                    player_two_active = True
-                    # Reset the player positions and speeds
-                    player_one.rect.center = [playerOne_x, playerOne_y]
-                    player_two.rect.center = [playerTwo_x, playerTwo_y]
-                    obstacles_one.speed = 4
-                    obstacles_one.score = 0
-                    obstacles_two.speed = 4
-                    obstacles_two.score = 0
-                    # Clear the vehicle groups
-                    vehicle_group_one.empty()
-                    vehicle_group_two.empty()
-                    # Reset the road speeds
-                    road_One.speed = 4
-                    road_Two.speed = 4
-                    # Continue the game
-                    game_active_multi = True
+                    multiplayer(0, 0)
+                    # gameOver = False
+                    # player_one_active = True
+                    # player_two_active = True
+                    # # Reset the player positions and speeds
+                    # player_one.rect.center = [playerOne_x, playerOne_y]
+                    # player_two.rect.center = [playerTwo_x, playerTwo_y]
+                    # obstacles_one.speed = 4
+                    # obstacles_one.score = 0
+                    # obstacles_two.speed = 4
+                    # obstacles_two.score = 0
+                    # # Clear the vehicle groups
+                    # vehicle_group_one.empty()
+                    # vehicle_group_two.empty()
+                    # # Reset the road speeds
+                    # road_One.speed = 4
+                    # road_Two.speed = 4
+                    # # Continue the game
+                    # game_active_multi = True
                 elif joystick_one.get_button(0) or joystick_two.get_button(0):
                     # exit the loop
                     print("No")
@@ -597,4 +575,4 @@ def multiplayer():
     #pygame.display.update()
 
 # uncomment this when testing on the main.py
-#multiplayer()
+#multiplayer(0, 0)

@@ -1,3 +1,5 @@
+import os
+
 import pygame
 import random
 import sys
@@ -21,7 +23,10 @@ selected_audio = random.choice(audio_files)
 # Load and play the selected audio file
 pygame.mixer.music.load(selected_audio)
 pygame.mixer.music.set_volume(0.3)
-#pygame.mixer.music.play(loops=-1)
+pygame.mixer.music.play(loops=-1)
+
+#sound effect crash
+
 
 # 800x480 5 inch rpi screen
 width = 800
@@ -39,6 +44,19 @@ black = (0, 0, 0, 0)
 
 alpha_value = 0  # Starting transparency (0 = fully transparent)
 fade_in = True
+
+
+def load_high_score(file_name="highscore.txt"):
+    if os.path.exists(file_name):
+        with open(file_name, "r") as file:
+            return int(file.read())
+    else:
+        return 0  # If the file doesn't exist, start with a high score of 0
+
+
+def save_high_score(new_high_score, file_name="highscore.txt"):
+    with open(file_name, "w") as file:
+        file.write(str(new_high_score))
 
 def singlePlayer():
 
@@ -77,8 +95,9 @@ def singlePlayer():
 
     class PlayerVehicle(Vehicle):
         def __init__(self, x, y):
-            image = pygame.image.load('../cars/AE86.png')
-            super().__init__(image, x, y)
+            self.image = pygame.image.load('../cars/AE86.png')
+            super().__init__(self.image, x, y)
+
 
 
     #text in main menu
@@ -89,39 +108,25 @@ def singlePlayer():
     main_text = title_font.render('Traffic Road Rush', False, white)
     main_text_rect = main_text.get_rect(center=(400, 100))
 
-    # space_text = space_font.render('Press "START" to start the game', False, white)
-    # space_text_rect = space_text.get_rect(center=(400, 300))
-    #
-    # quit_text = space_font.render('Press "SELECT" to quit', False, white)
-    # quit_text_rect = space_text.get_rect(center=(450, 380))
 
-
-    # def animationMenu():
-    #     global alpha_value, fade_in, joystick
-    #     if fade_in:
-    #         alpha_value += 10  # Increase alpha to fade in
-    #         if alpha_value >= 255:  # Fully opaque, start fading out
-    #             alpha_value = 255
-    #             fade_in = False
-    #     else:
-    #         alpha_value -= 10  # Decrease alpha to fade out
-    #         if alpha_value <= 0:  # Fully transparent, start fading in
-    #             alpha_value = 0
-    #             fade_in = True
-    #
-    #     # Apply alpha to the space text surface
-    #     space_text.set_alpha(alpha_value)
-    #     quit_text.set_alpha(alpha_value)
 
     # Menu options
     menu_options = ["Single Player", "Multiplayer", "Quit"]
     selected_option = 0  # Index for the current selection
     cooldown = 0
-    icon = pygame.image.load('../cars/wheel.png')
-    icon = pygame.transform.scale(icon, (30, 30))
+    icon = pygame.image.load('../cars/burning-wheel.png')
+    icon = pygame.transform.scale(icon, (50, 50))
+
+    background_one = pygame.image.load('../cars/background1.png')
+    background_one = pygame.transform.scale(background_one, (400, 200))
+    # background_two = pygame.image.load('../cars/background2.png')
+    # background_two = pygame.transform.scale(background_two, (400, 200))
 
     def draw_menu():
         screen.fill((2, 21, 38))  # Fill background
+        screen.blit(background_one, (-80, 300))
+        # screen.blit(background_two, (500, 300))
+
         screen.blit(main_text, main_text_rect)
         for idx, option in enumerate(menu_options):
             label = title_font.render(option, True, (110, 172, 218) if idx == selected_option else (255, 255, 255))
@@ -129,7 +134,7 @@ def singlePlayer():
 
             # Display the icon next to the selected option
             if idx == selected_option:
-                screen.blit(icon, (205, 200 + idx * 60))
+                screen.blit(icon, (200, 190 + idx * 60))
 
         pygame.display.flip()
 
@@ -148,6 +153,8 @@ def singlePlayer():
     vehicle_images = []
     for image_filename in image_filenames:
         image = pygame.image.load('../cars/'+ image_filename)
+        if image_filename == 'bus.png':
+            image = pygame.transform.scale(image, (150, 400))
         vehicle_images.append(image)
 
     #sprite group for vehicles
@@ -169,6 +176,7 @@ def singlePlayer():
     gameover = False
     speed = 4
     score = 0
+    high_score = load_high_score()
 
     # game loop
     clock = pygame.time.Clock()
@@ -231,14 +239,10 @@ def singlePlayer():
                     if joystick.rumble(0, 0.7, 500):
                         print(f"Rumble effect played on joystick {event.instance_id}")
             #
-            # if event.type == pygame.JOYBUTTONUP:
-            #     print("Joystick button released.")
+            if event.type == pygame.JOYBUTTONUP:
+                print("Joystick button released.")
 
         for joystick in joysticks.values():
-            # if joystick_one.get_button(9):  # Correct usage, checking button 9 (the integer index)
-            #     game_active = True
-            # if joystick_one.get_button(8):
-            #     game_active = False
 
             horizontal_move = joystick_one.get_axis(0)
             player.rect.x += horizontal_move * 5
@@ -299,6 +303,18 @@ def singlePlayer():
                     vehicle = Vehicle(image, lane, height / -2, vehicle_scale = vehicle_spawn_scale)
                     vehicle_group.add(vehicle)
 
+            if score > high_score:
+                high_score = score  # Update the high score
+                save_high_score(high_score)  # Save the new high score to the file
+
+                # Display the high score on screen (optional)
+            font = pygame.font.Font(pygame.font.get_default_font(), 16)
+            high_score_text = font.render('High Score: ' + str(high_score), False, white)
+            high_score_rect = high_score_text.get_rect(center=(700, 50))
+            screen.blit(high_score_text, high_score_rect)
+
+
+
 
             for vehicle in vehicle_group:
                 vehicle.rect.y += speed
@@ -309,18 +325,18 @@ def singlePlayer():
                     #add to score
                     score += 1
 
-                    # add speed to the game after passing 5 vehicles
+                   # add speed to the game after passing 5 vehicles
                     if score > 0 and score % 5 == 0:
-                        speed += 0.5
+                        speed += 0.7
 
             #draw the vehicles on screen
             vehicle_group.draw(screen)
 
             #display the score
             font = pygame.font.Font(pygame.font.get_default_font(), 16)
-            text_surf = font.render('Score: '+ str(score), True, white)
+            text_surf = font.render('Score: '+ str(score), False, white)
             text_rect = text_surf.get_rect()
-            text_rect.center = (50, 450)
+            text_rect.center = (50, 50)
             screen.blit(text_surf, text_rect)
 
             #check if there's a head on collision
@@ -330,21 +346,30 @@ def singlePlayer():
 
             #display game over screen
             if gameover:
-
+                pygame.mixer.music.load('../sound/crash.mp3')
+                pygame.mixer.music.set_volume(0.3)
+                pygame.mixer.music.play(loops=1)
                 screen.blit(crash, crash_rect)
 
-                pygame.draw.rect(screen, black, (0,50, width, 150))
+                pygame.draw.rect(screen, black, (0,43, width, 250))
 
                 font = pygame.font.Font(pygame.font.get_default_font(), 16)
-                text = font.render('Game over. Play again? Enter A to play again, B to quit', True, white)
-                text_rect = text.get_rect()
-                text_rect.center = (width / 2, 100)
+                text = font.render('Game over. Play again? Enter A to play again, B to quit', False, white)
+                text_rect = text.get_rect(center=(width / 2, 100))
 
-                score_text = font.render('Score: ' + str(score), True, white)
-                score_text_rect = score_text.get_rect()
-                score_text_rect.center = (width / 2, 150)
+                high_score_text = font.render('High Score: ' + str(high_score), False, white)
+                high_score_rect = high_score_text.get_rect(center=(width / 2, 150))
+
+                score_text = font.render('Score: ' + str(score), False, white)
+                score_text_rect = score_text.get_rect(center=(width / 2, 230))
+
+                if score >= high_score:
+                    new_high_score = font.render('NEW HIGH SCORE!!', False, yellow)
+                    new_high_score_rect = new_high_score.get_rect(center=(width / 2, 200))
+                    screen.blit(new_high_score, new_high_score_rect)
 
                 screen.blit(score_text, score_text_rect)
+                screen.blit(high_score_text, high_score_rect)
                 screen.blit(text, text_rect)
 
             pygame.display.update()
@@ -399,14 +424,9 @@ def singlePlayer():
 
         elif multiplayer_active: #multiplayer
             # print(multiplayer_active
-            multiplayer()
+            multiplayer(0, 0)
             multiplayer_active = False
         else:
-            # animationMenu()
-            # screen.fill((128, 0, 0))
-            # screen.blit(main_text, main_text_rect)
-            # screen.blit(space_text, space_text_rect)
-            # screen.blit(quit_text, quit_text_rect)
             draw_menu()
 
             # Get vertical axis movement (axis 1)
